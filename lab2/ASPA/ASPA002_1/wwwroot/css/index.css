@@ -1,0 +1,23 @@
+/* Лабораторная работа 2. Оформление страницы Index.html / Neumann.html. */
+
+/* фотография Джона фон Неймана - во всю ширину страницы */
+img {
+    width: 100%;
+}
+
+/* цвета значений вычислений */
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
+
+.magenta {
+    color: magenta;
+}
+
+.blue {
+    color: blue;
+}

@@ -1,0 +1,53 @@
+// Лабораторная работа 2. Задание 3. Проект ASPA002_3.
+//
+// Сервер имеет 5 конечных точек. Запросы к трём из них (/test1, /test2, /test3)
+// приводят к исключению. Все исключения обрабатываются встроенным
+// middleware-элементом UseExceptionHandler, который перенаправляет обработку
+// на конечную точку /error.
+//
+// ВНИМАНИЕ! По условию задания обработчик ошибок работает корректно в режиме Release.
+// В режиме Release среда ASPNETCORE_ENVIRONMENT = Production (см. launchSettings.json),
+// поэтому в конвейер не добавляется DeveloperExceptionPage, показывающий стек вызовов,
+// и страница "Oops!" выводится штатно.
+
+using Microsoft.AspNetCore.Diagnostics;
+
+internal class Program
+{
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Logging.AddFilter("Microsoft.AspNetCore.Diagnostics", LogLevel.None);   // фильтр сообщений
+
+        var app = builder.Build();
+
+        app.UseExceptionHandler("/error");          // path к обработчику Exception
+
+        app.MapGet("/", () => "Start");
+        app.MapGet("/test1", () =>
+        {
+            throw new Exception("-- Exception Test --");        // пользовательское исключение
+        });
+        app.MapGet("/test2", () =>
+        {
+            int x = 0, y = 5, z = 0;
+            z = y / x;                  // деление на 0
+            return "test2";
+        });
+        app.MapGet("/test3", () =>
+        {
+            int[] x = new int[3] { 1, 2, 3 };
+            int y = x[3];               // выход за пределы массива
+            return "test3";
+        });
+        app.Map("/error", async (ILogger<Program> logger, HttpContext context) =>
+        {
+            IExceptionHandlerFeature? exobj = context.Features.Get<IExceptionHandlerFeature>();    // добираемся к Exception
+            await context.Response.WriteAsync($"<h1>Oops!</h1>");
+            logger.LogError(exobj?.Error, "ExceptionHandler");
+        });
+
+        app.Run();
+    }
+}
