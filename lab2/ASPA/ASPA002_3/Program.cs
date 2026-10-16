@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Diagnostics;
 
-internal class Program
+public class Program
 {
-    private static void Main(string[] args)
+    public static void Main()
     {
-        var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder();
 
         // Отключаем служебные сообщения диагностики, чтобы в консоли
         // остались только сообщения приложения (ExceptionHandler).
@@ -20,36 +20,48 @@ internal class Program
         app.MapGet("/", () => "Start");
 
         // /test1 — пользовательское Exception
-        app.MapGet("/test1", () =>
-        {
-            throw new Exception("-- Exception Test --");
-        });
+        app.MapGet(
+            "/test1",
+            () =>
+            {
+                throw new Exception("-- Exception Test --");
+            }
+        );
 
         // /test2 — DivideByZeroException (деление на 0)
-        app.MapGet("/test2", () =>
-        {
-            int x = 0;
-            int y = 5;
-            int z = y / x; // деление на ноль → DivideByZeroException
-            return "test2";
-        });
+        app.MapGet(
+            "/test2",
+            () =>
+            {
+                int x = 0;
+                int y = 5;
+                int z = y / x; // деление на ноль → DivideByZeroException
+                return "test2";
+            }
+        );
 
         // /test3 — IndexOutOfRangeException (выход за границы массива)
-        app.MapGet("/test3", () =>
-        {
-            int[] x = new int[3] { 1, 2, 3 };
-            int y = x[3]; // индекс 3 вне диапазона [0..2] → IndexOutOfRangeException
-            return "test3";
-        });
+        app.MapGet(
+            "/test3",
+            () =>
+            {
+                int[] x = new int[3] { 1, 2, 3 };
+                int y = x[3]; // индекс 3 вне диапазона [0..2] → IndexOutOfRangeException
+                return "test3";
+            }
+        );
 
         // /error — обработчик исключений с выводом страницы <h1>Oops!</h1>
         // и записью в журнал через ILogger<Program>.
-        app.Map("/error", async (ILogger<Program> logger, HttpContext context) =>
-        {
-            IExceptionHandlerFeature? exobj = context.Features.Get<IExceptionHandlerFeature>();
-            await context.Response.WriteAsync("<h1>Oops!</h1>");
-            logger.LogError(exobj?.Error, "ExceptionHandler");
-        });
+        app.Map(
+            "/error",
+            async (ILogger<Program> logger, HttpContext context) =>
+            {
+                IExceptionHandlerFeature? exobj = context.Features.Get<IExceptionHandlerFeature>();
+                await context.Response.WriteAsync("<h1>Oops!</h1>");
+                logger.LogError(exobj?.Error, "ExceptionHandler");
+            }
+        );
 
         app.Run();
     }
