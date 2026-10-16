@@ -4,7 +4,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder();
 
-        builder.Services.AddHttpLogging(logging => { });
+        builder.Services.AddHttpLogging(_ => { });
 
         var app = builder.Build();
 
