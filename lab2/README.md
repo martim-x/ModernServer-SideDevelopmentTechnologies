@@ -338,7 +338,8 @@ var app = builder.Build();                           // сборка проду�
 | **Встроенный (built-in)** | метод `Use<Name>()` из `Microsoft.AspNetCore.Builder` | `UseWelcomePage`, `UseStaticFiles`, `UseDefaultFiles`, `UseExceptionHandler` |
 | **Inline (лямбда)** | `app.Use(async (context, next) => ...)` | не использован в лабораторной, но показан в лекции 6 (`try/catch` с `await next()`) |
 | **Класс (`IMiddleware` / `UseMiddleware<T>`)** | публичный конструктор с `RequestDelegate`, метод `Invoke` или `InvokeAsync` | `MiddlewareErrorHandler` (лекция 6, слайд 4) |
-| **Расширение (`IApplicationBuilder`)** | собственный метод `Use<Name>(this IApplicationBuilder, ...)` | `UseANCErrorHandler` (лекция 6, слайд 5) |
+|| **Промежуточный (intermediate)** | `app.Use(...)` или `UseMiddleware<T>` — проходит через цепочку, не разрывает её | `UseExceptionHandler`, `UseRouting`, `UseStaticFiles` (когда файл не найден) |
+|| **Расширение (`IApplicationBuilder`)** | собственный метод `Use<Name>(this IApplicationBuilder, ...)` | `UseANCErrorHandler` (лекция 6) |
 
 > **Критерий различия:** middleware всегда принимает `RequestDelegate next` (следующий обработчик в цепочке) и возвращает `Task`. Endpoint (`Map*`) — это делегат, который выполняется в конце конвейера (`UseEndpoints`) и не принимает `next`.
 
