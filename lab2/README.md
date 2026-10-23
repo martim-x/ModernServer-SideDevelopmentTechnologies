@@ -6,6 +6,8 @@
 
 Решение **ASPA** содержит три проекта, созданных шаблоном «Пустой шаблон ASP.NET Core» (`dotnet new web`), версия .NET 8:
 
+> Ответы на вопросы 15–22 находятся в разделе «Задание 4 (вопросы 15–22) — ответы» ниже.
+
 | Проект     | Порт   | Содержание                                                            |
 |------------|--------|-----------------------------------------------------------------------|
 | `ASPA002_1`| 5001   | Приветственная страница ASP.NET Core и статические файлы из `wwwroot`  |
@@ -181,12 +183,45 @@ fail: Program[0]
 
 ---
 
-## Задание 4 (вопросы 15–22)
+## Задание 4 (вопросы 15–22) — ответы
 
-Ответы на вопросы 15–22 (паттерн Builder, Chain of Responsibility, Middleware, статический файл,
-признак наименования middleware, встроенные middleware, каталог статических файлов,
-Джон фон Нейман) оформлены отдельно в `lab2_ответы.md`.
+**15. Поясните назначение паттерна Builder. Укажите: в каком месте ASPA применяется этот паттерн.**
+Builder — пошаговая сборка сложного объекта. В ASPA: `var builder = WebApplication.CreateBuilder(args); ... var app = builder.Build();` — сборка `WebApplication` из конфигурации и сервисов.
 
+**16. Поясните назначение паттерна Chain of Responsibility. Укажите: в каком месте ASPA применяется этот паттерн.**
+Цепочка обработчиков, каждый решает — обработать сам или передать `next`. В ASPA: конвейер middleware (`UseExceptionHandler`, `UseStaticFiles`, `UseDefaultFiles`, endpoint'ы), где каждый компонент вызывает `await next(context)` или завершает ответ.
+
+**17. Поясните понятие: Middleware.**
+Компонент конвейера обработки HTTP-запроса, принимающий `HttpContext` и решающий — сформировать ответ сам (терминальный) или передать дальше через `await next(context)`.
+
+**18. Поясните понятие: статический файл.**
+Файл, отдаваемый «как есть» (HTML, CSS, JS, картинка) без серверной обработки. В ASPA хранятся в `wwwroot` (и дополнительном каталоге `Picture`) и отдаются через `UseStaticFiles`.
+
+**19. Какой отличительный (общепринятый) признак наименования, подключаемого Middleware-компонента.**
+Метод расширения `Use<Имя>()` (например, `UseStaticFiles`, `UseExceptionHandler`) — возвращают `IApplicationBuilder` и подключаются в конвейер.
+
+**20. Перечислите известные вам встроенные Middleware-компоненты.**
+`UseWelcomePage`, `UseDefaultFiles`, `UseStaticFiles`, `UseExceptionHandler`, `UseDeveloperExceptionPage`, `UseRouting`, `UseAuthentication`, `UseAuthorization`, `UseEndpoints`, `UseCors`.
+
+**21. Какое имя директория ASPA (по умолчанию), применяемого для хранения статических файлов приложения.**
+`wwwroot` (Web root по умолчанию: `{ContentRoot}/wwwroot`).
+
+**22. Кто такой Джон фон Нейман?**
+Джон фон Нейман (1903–1957) — математик и информатик; архитектура фон Неймана (процессор+память+ввод-вывод), теория игр, Manhattan Project. В лабе его фото используется как статический файл.
+
+---
+
+## Краткая теория по коду: объекты и как они сделаны (лаба 2)
+
+| Объект | Где | Как сделан | Назначение |
+|---|---|---|---|
+| `WebApplicationBuilder` | `Program.cs` всех трёх | `WebApplication.CreateBuilder()` | Сборщик приложения: конфигурация, сервисы, логирование |
+| `WebApplication` | `Program.cs` | `builder.Build()` | Готовое приложение с конвейером middleware |
+| `app.Map("/aspnetcore", branch => branch.UseWelcomePage())` | ASPA002_1 | ветвление конвейера | Терминальный middleware WelcomePage на пути `/aspnetcore` |
+| `DefaultFilesOptions` / `StaticFileOptions` | ASPA002_2 | объекты настроек | Список имён стартовых страниц; дополнительный каталог `Picture` по `/static` |
+| `PhysicalFileProvider` | ASPA002_2 | `new PhysicalFileProvider(contentRoot)` | Провайдер файлов для каталога вне `wwwroot` |
+| `IExceptionHandlerFeature` | ASPA002_3 | `context.Features.Get<IExceptionHandlerFeature>()` | Доступ к исходному исключению в обработчике `/error` |
+| `ILogger<Program>` | ASPA002_3 | внедряется в делегат `/error` | Запись исключения в журнал (`LogError`) |
 
 ---
 

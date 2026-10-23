@@ -49,3 +49,7 @@ public class Repository : IRepository
     {
     }
 }
+
+// public Repository(string basePath, string jsonfilename) { BasePath = basePath; var FullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", basePath, jsonfilename); if (File.Exists(FullPath)) { var json = File.ReadAllText(FullPath); _celebrities = JsonSerializer.Deserialize<Celebrity[]>(json); } else { _celebrities = Array.Empty<Celebrity>(); } }
+// public static Repository Create(string basepath) { return new Repository(basepath, JSONFileName); }
+// public string? getPhotoPathById(int Id) => getCelebrityById(Id)?.PhotoPath;

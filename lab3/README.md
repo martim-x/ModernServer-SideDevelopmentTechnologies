@@ -4,6 +4,8 @@
 **Тема:** паттерн Repository, DAL на JSON, `IDisposable`, статические файлы и обзор каталога
 **Цель:** изучить паттерн Repository для доступа к данным в формате JSON, реализовать библиотеку DAL, консольный тест и ASPA с endpoint'ами и настройкой статических файлов/обзора каталога.
 
+> Ответы на вопросы 20–26 находятся в разделе «Ответы на вопросы (20–26)» ниже.
+
 Решение **ASPA** содержит три проекта, .NET 8:
 
 | Проект | Тип | Порт | Содержание |
@@ -202,6 +204,23 @@ app.UseDirectoryBrowser(new DirectoryBrowserOptions
 
 По адресу `/Celebrities/download/` отображается `Index of /Celebrities/download/`
 со списком файлов (фото + `Celebrities.json`) и возможностью скачивания (проверено: 200).
+
+---
+
+## Краткая теория по коду: объекты и как они сделаны (лаба 3)
+
+| Объект | Где | Как сделан | Назначение |
+|---|---|---|---|
+| `Celebrity` (record) | `DAL003/Celebrity.cs` | `public record Celebrity(int Id, string Firstname, string Surname, string PhotoPath);` | Модель знаменитости (неизменяемая запись) |
+| `IRepository` | `DAL003/IRepository.cs` | интерфейс, наследует `IDisposable` | Контракт доступа к данным (подменяемая реализация) |
+| `Repository` | `DAL003/Repository.cs` | класс, реализует `IRepository` | JSON-DAL: чтение `Celebrities.json`, поиск по Id/фамилии, путь к фото |
+| `Repository.JSONFileName` | `Repository` | `public static string JSONFileName { get; set; }` | Имя JSON-файла (задаётся из приложения) |
+| `BasePath` | `Repository` | `Path.GetFullPath(basePath)` в конструкторе | Полный путь к каталогу с JSON и фото |
+| `JsonSerializer` | `Repository.Load()` | `JsonSerializer.Deserialize<Celebrity[]>(json, options)` с `PropertyNameCaseInsensitive = true` | Десериализация JSON в массив `Celebrity` |
+| `WebApplication` | `ASPA003/Program.cs` | `builder.Build()` | Приложение с endpoint'ами и middleware |
+| `StaticFileOptions` | `ASPA003/Program.cs` | объект с `FileProvider`/`RequestPath` | Публикация фото по `/Photo/...` |
+| `DirectoryBrowserOptions` | `ASPA003/Program.cs` | объект с `FileProvider`/`RequestPath` | Обзор каталога по `/Celebrities/download/` |
+| `PhysicalFileProvider` | `ASPA003/Program.cs` | `new PhysicalFileProvider(celebritiesPath)` | Провайдер файлов для каталога вне `wwwroot` |
 
 ---
 

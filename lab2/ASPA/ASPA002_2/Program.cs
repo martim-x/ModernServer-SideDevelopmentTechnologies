@@ -24,3 +24,14 @@ public class Program
         app.Run();
     }
 }
+
+// var builder = WebApplication.CreateBuilder(args);
+// var app = builder.Build();
+// DefaultFilesOptions options = new DefaultFilesOptions();
+// options.DefaultFileNames.Clear();
+// options.DefaultFileNames.Add("Neumann.html");
+// app.UseDefaultFiles(options);
+// app.UseStaticFiles();
+// app.UseStaticFiles("/static");
+// app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "Picture")), RequestPath = "/Picture" });
+// app.Run();
