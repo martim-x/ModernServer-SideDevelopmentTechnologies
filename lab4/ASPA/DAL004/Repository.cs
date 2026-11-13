@@ -20,6 +20,9 @@ public class Repository : IRepository
 
     private Celebrity[] _celebrities = Array.Empty<Celebrity>();
 
+    /// <summary>Счётчик изменений с момента последнего <see cref="SaveChanges"/>.</summary>
+    private int _changes;
+
     private Repository(string basePath)
     {
         BasePath = Path.GetFullPath(basePath);
@@ -52,9 +55,9 @@ public class Repository : IRepository
     public Celebrity? getCelebrityById(int id) =>
         _celebrities.FirstOrDefault(celebrity => celebrity.Id == id);
 
-    public Celebrity[] getCelebritiesBySurname(string surname) =>
+    public Celebrity[] getCelebritiesBySurname(string Surname) =>
         _celebrities
-            .Where(celebrity => celebrity.Surname.Equals(surname, StringComparison.OrdinalIgnoreCase))
+            .Where(celebrity => celebrity.Surname.Equals(Surname, StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
     public string? getPhotoPathById(int id) =>
@@ -64,6 +67,7 @@ public class Repository : IRepository
     {
         int id = NextId();
         _celebrities = _celebrities.Append(celebrity with { Id = id }).ToArray();
+        _changes++;
         return id;
     }
 
@@ -76,6 +80,7 @@ public class Repository : IRepository
         }
 
         _celebrities = _celebrities.Where((_, position) => position != index).ToArray();
+        _changes++;
         return true;
     }
 
@@ -92,6 +97,7 @@ public class Repository : IRepository
         _celebrities = _celebrities.Where((_, position) => position != index).ToArray();
         int newId = NextId();
         _celebrities = _celebrities.Append(celebrity with { Id = newId }).ToArray();
+        _changes++;
         return newId;
     }
 
@@ -101,7 +107,10 @@ public class Repository : IRepository
         // Если файл удалён во время работы приложения — FileNotFoundException уходит в обработчик ошибок.
         _ = File.ReadAllText(JsonPath);
         File.WriteAllText(JsonPath, JsonSerializer.Serialize(_celebrities, JsonOptions));
-        return _celebrities.Length;
+
+        int changes = _changes;
+        _changes = 0;
+        return changes;
     }
 
     public void Dispose()

@@ -152,7 +152,7 @@ using (IRepository repository = Repository.Create("Celebrities"))
     app.MapGet("/Celebrities/BySurname/{surname}", (string surname) =>
         repository.getCelebritiesBySurname(surname));
     app.MapGet("/Celebrities/PhotoPathById/{id:int}", (int id) =>
-        repository.getPhotoPathById(id));
+        repository.getPhotoPathById(id) ?? string.Empty);
     app.MapGet("/", () => "Hello World!");
 
     // ... UseStaticFiles / UseDirectoryBrowser (см. ниже)
@@ -168,9 +168,19 @@ using (IRepository repository = Repository.Create("Celebrities"))
 | `/` | 200 | `Hello World!` |
 | `/Celebrities` | 200 | JSON-массив из 7 знаменитостей |
 | `/Celebrities/2` | 200 | `{"id":2,...,"surname":"Berners-Lee",...}` |
+| `/Celebrities/222` | 200 | `null` (как на скриншоте условия) |
 | `/Celebrities/BySurname/Chomsky` | 200 | `[{"id":1,...}]` |
-| `/Celebrities/PhotoPathById/2` | 200 | `/Photo/Berners-Lee.jpg` |
+| `/Celebrities/BySurname/XXXX` | 200 | `[]` |
+| `/Celebrities/PhotoPathById/2` | 200 | `/Photo/Berners-Lee.jpg` (`text/plain`) |
+| `/Celebrities/PhotoPathById/222` | 200 | пустое тело |
 | `/Photo/Berners-Lee.jpg` | 200 | `image/jpeg`, 176453 байт |
+
+> `getPhotoPathById` возвращает `string?`, и для отсутствующего Id это `null`. Обработчик в условии
+> (`(int id) => repository.getPhotoPathById(id)`) на .NET 8 на таком `null` падает:
+> `ArgumentNullException: Value cannot be null. (Parameter 'text')` из
+> `RequestDelegateFactory.ExecuteWriteStringResponseAsync` → 500. Чтобы получить показанный
+> в условии пустой ответ, обработчик возвращает `repository.getPhotoPathById(id) ?? string.Empty`.
+> Для `Celebrity?` такой проблемы нет: `null` сериализуется в тело `null` со статусом 200.
 
 ---
 

@@ -49,7 +49,7 @@ using (IRepository repository = Repository.Create("Celebrities"))
     });
 
     // Запрос, не совпавший ни с одной конечной точкой
-    app.MapFallback((HttpContext ctx) => Results.NotFound(new { error = $"Path {ctx.Request.Path} not supported" }));
+    app.MapFallback((HttpContext ctx) => Results.NotFound(new { error = $"path {ctx.Request.Path} not supported" }));
 
     app.Map("/Celebrities/Error", (HttpContext ctx) =>
     {
@@ -64,7 +64,7 @@ using (IRepository repository = Repository.Create("Celebrities"))
             if (ex is BadHttpRequestException) rc = Results.BadRequest(ex.Message);                // ошибка в формате запроса
             if (ex is SaveException) rc = Results.Problem(title: "ASPA004/SaveChanges",
                 detail: ex.Message, instance: app.Environment.EnvironmentName, statusCode: 500);
-            if (ex is AddCelebrityException) rc = Results.Problem(title: "ASPA004/AddCelebrity",
+            if (ex is AddCelebrityException) rc = Results.Problem(title: "ASPA004/addCelebrity",
                 detail: ex.Message, instance: app.Environment.EnvironmentName, statusCode: 500);
             if (ex is FileNotFoundException) rc = Results.Problem(title: "ASPA004",
                 detail: ex.Message, instance: app.Environment.EnvironmentName, statusCode: 500);

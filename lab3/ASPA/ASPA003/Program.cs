@@ -18,8 +18,11 @@ using (IRepository repository = Repository.Create("Celebrities"))
     app.MapGet("/Celebrities/BySurname/{surname}", (string surname) =>
         repository.getCelebritiesBySurname(surname));
 
+    // getPhotoPathById возвращает string?; для отсутствующего Id это null.
+    // null из обработчика, возвращающего string, роняет запрос (ArgumentNullException в
+    // RequestDelegateFactory), поэтому отсутствующий путь отдаём пустой строкой.
     app.MapGet("/Celebrities/PhotoPathById/{id:int}", (int id) =>
-        repository.getPhotoPathById(id));
+        repository.getPhotoPathById(id) ?? string.Empty);
 
     app.MapGet("/", () => "Hello World!");
 

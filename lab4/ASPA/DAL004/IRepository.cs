@@ -12,7 +12,7 @@ public interface IRepository : IDisposable
 
     Celebrity? getCelebrityById(int id);
 
-    Celebrity[] getCelebritiesBySurname(string surname);
+    Celebrity[] getCelebritiesBySurname(string Surname);
 
     string? getPhotoPathById(int id);
 
@@ -25,6 +25,6 @@ public interface IRepository : IDisposable
     /// <summary>Изменяет запись по Id. Возвращает новый Id записи (null — записи с таким Id нет).</summary>
     int? updCelebrityById(int id, Celebrity celebrity);
 
-    /// <summary>Записывает текущее состояние в JSON-файл. Возвращает число сохранённых записей (0 — ошибка).</summary>
+    /// <summary>Записывает текущее состояние в JSON-файл. Возвращает количество сохранённых изменений (0 — изменений не было).</summary>
     int SaveChanges();
 }

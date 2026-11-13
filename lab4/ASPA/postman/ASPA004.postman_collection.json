@@ -134,7 +134,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 404', () => pm.response.to.have.status(404));",
-                  "pm.test('fallback text', () => pm.expect(pm.response.json().error).to.eql('Path /Celebrities/5aa4 not supported'));"
+                  "pm.test('fallback text', () => pm.expect(pm.response.json().error).to.eql('path /Celebrities/5aa4 not supported'));"
                 ]
               }
             }
@@ -239,7 +239,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 404', () => pm.response.to.have.status(404));",
-                  "pm.test('fallback text', () => pm.expect(pm.response.json().error).to.eql('Path /Celebrities/8 not supported'));"
+                  "pm.test('fallback text', () => pm.expect(pm.response.json().error).to.eql('path /Celebrities/8 not supported'));"
                 ]
               }
             }
@@ -268,7 +268,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 404', () => pm.response.to.have.status(404));",
-                  "pm.test('fallback text', () => pm.expect(pm.response.json().error).to.eql('Path /Celebrities/8 not supported'));"
+                  "pm.test('fallback text', () => pm.expect(pm.response.json().error).to.eql('path /Celebrities/8 not supported'));"
                 ]
               }
             }
