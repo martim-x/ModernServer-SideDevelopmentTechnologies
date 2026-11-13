@@ -34,7 +34,10 @@ using (IRepository repository = Repository.Create("Celebrities"))
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(celebritiesPath),
-        RequestPath = "/Celebrities/download"
+        RequestPath = "/Celebrities/download",
+        OnPrepareResponse = ctx =>
+            ctx.Context.Response.Headers.Append(
+                "Content-Disposition", $"attachment; filename=\"{ctx.File.Name}\"")
     });
 
     app.UseDirectoryBrowser(new DirectoryBrowserOptions

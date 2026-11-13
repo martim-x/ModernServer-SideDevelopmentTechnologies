@@ -19,9 +19,12 @@
 ```bash
 cd lab3/ASPA
 dotnet build
-dotnet run --project Test_DAL003          # консольный тест
-dotnet run --project ASPA003              # http://localhost:5153
+cd Test_DAL003 && dotnet run             # консольный тест (запуск из каталога проекта)
+cd ../ASPA003 && dotnet run              # http://localhost:5153
 ```
+
+> Запускать `Test_DAL003` нужно именно из каталога проекта: `Repository.Create("Celebrities")`
+> разрешает путь от текущего каталога, а не от каталога сборки.
 
 Данные (`Celebrities.json` + фотографии) лежат в каталоге `Celebrities` рядом с каждым приложением,
 так как `Repository.Create("Celebrities")` ищет директорий в текущем каталоге приложения.
@@ -183,6 +186,8 @@ app.UseStaticFiles(new StaticFileOptions
 
 Фотографии из каталога `Celebrities` публикуются по адресу `/Photo/<имя>.jpg`,
 что позволяет отображать их в браузере (проверено: `/Photo/Berners-Lee.jpg` → 200).
+Файл `Linus.jpg` переименован в `Torvalds.jpg`, чтобы совпадать с `PhotoPath` записи Id 5
+(проверено: `/Photo/Torvalds.jpg` → 200).
 
 ---
 
@@ -192,7 +197,10 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(celebritiesPath),
-    RequestPath = "/Celebrities/download"
+    RequestPath = "/Celebrities/download",
+    OnPrepareResponse = ctx =>
+        ctx.Context.Response.Headers.Append(
+            "Content-Disposition", $"attachment; filename=\"{ctx.File.Name}\"")
 });
 
 app.UseDirectoryBrowser(new DirectoryBrowserOptions
@@ -203,7 +211,9 @@ app.UseDirectoryBrowser(new DirectoryBrowserOptions
 ```
 
 По адресу `/Celebrities/download/` отображается `Index of /Celebrities/download/`
-со списком файлов (фото + `Celebrities.json`) и возможностью скачивания (проверено: 200).
+со списком файлов (фото + `Celebrities.json`). `OnPrepareResponse` добавляет заголовок
+`Content-Disposition: attachment`, поэтому файл не открывается в браузере, а скачивается
+(проверено: `/Celebrities/download/Codd.jpg` → 200, `Content-Disposition: attachment; filename="Codd.jpg"`).
 
 ---
 
@@ -254,7 +264,7 @@ JSON-файл `Celebrities.json` в каталоге `BasePath`.
 ### JSON
 
 **JSON (JavaScript Object Notation)** — текстовый формат обмена данными, массив объектов
-`[{ "Id": 1, "Firstname": "Noam", ... }]`. В `DAL003` файл `Celeidades.json` (Celebrities.json)
+`[{ "Id": 1, "Firstname": "Noam", ... }]`. В `DAL003` файл `Celebrities.json`
 хранит список знаменитостей; `PhotoPath` содержит относительный URL фотографии (`/Photo/...jpg`).
 
 ---
