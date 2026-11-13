@@ -35,16 +35,16 @@ using (IRepository repository = Repository.Create("Celebrities"))    // ката
 
     if (testupd1 != null)
         if (repository.updCelebrityById((int)testupd1,
-                new Celebrity(0, "Updated1", "Updated1", "Photo/Updated1.jpg")))
+                new Celebrity(0, "Updated1", "Updated1", "Photo/Updated1.jpg")) != null)
             Console.WriteLine($" update {testupd1} ");
         else Console.WriteLine($"update {testupd1} error");
     if (testupd2 != null)
         if (repository.updCelebrityById((int)testupd2,
-                new Celebrity(0, "Updated2", "Updated2", "Photo/Updated2.jpg")))
+                new Celebrity(0, "Updated2", "Updated2", "Photo/Updated2.jpg")) != null)
             Console.WriteLine($" update {testupd2} ");
         else Console.WriteLine($"update {testupd2} error");
     if (repository.updCelebrityById(1000,
-            new Celebrity(0, "Updated1000", "Updated1000", "Photo/Updated1000.jpg")))
+            new Celebrity(0, "Updated1000", "Updated1000", "Photo/Updated1000.jpg")) != null)
         Console.WriteLine($" update {1000} ");
     else Console.WriteLine($"update {1000} error");
     repository.SaveChanges();

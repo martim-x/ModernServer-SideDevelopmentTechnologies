@@ -22,8 +22,8 @@ public interface IRepository : IDisposable
     /// <summary>Удаляет запись по Id. false — записи с таким Id нет.</summary>
     bool delCelebrityById(int id);
 
-    /// <summary>Изменяет запись по Id. false — записи с таким Id нет.</summary>
-    bool updCelebrityById(int id, Celebrity celebrity);
+    /// <summary>Изменяет запись по Id. Возвращает новый Id записи (null — записи с таким Id нет).</summary>
+    int? updCelebrityById(int id, Celebrity celebrity);
 
     /// <summary>Записывает текущее состояние в JSON-файл. Возвращает число сохранённых записей (0 — ошибка).</summary>
     int SaveChanges();

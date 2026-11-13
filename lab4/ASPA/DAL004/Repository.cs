@@ -79,19 +79,20 @@ public class Repository : IRepository
         return true;
     }
 
-    public bool updCelebrityById(int id, Celebrity celebrity)
+    public int? updCelebrityById(int id, Celebrity celebrity)
     {
         int index = Array.FindIndex(_celebrities, item => item.Id == id);
         if (index < 0)
         {
-            return false;
+            return null;
         }
 
         // Обновление выполняется как «удалить старую запись + добавить новую»:
         // новая запись получает очередной свободный Id (так работает эталонный DAL004 из условия).
         _celebrities = _celebrities.Where((_, position) => position != index).ToArray();
-        _celebrities = _celebrities.Append(celebrity with { Id = NextId() }).ToArray();
-        return true;
+        int newId = NextId();
+        _celebrities = _celebrities.Append(celebrity with { Id = newId }).ToArray();
+        return newId;
     }
 
     public int SaveChanges()

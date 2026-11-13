@@ -4,7 +4,7 @@
 **Тема:** `Map`/API — `MapGet`, `MapPost`, `MapPut`, `MapDelete`, CRUD, Postman, Problem Details
 **Цель:** реализовать JSON-DAL с операциями изменения (добавление, удаление, обновление), разработать
 minimal API с обработкой ошибок через `UseExceptionHandler`/`Results.Problem`, пройти тесты из условия
-в Postman (или его консольном эквиваленте).
+в Postman (коллекция прилагается, прогон проверен newman).
 
 > Ответы на вопросы 34–36 — в разделе «Задание 5 (вопросы 34–36) — ответы».
 
@@ -47,10 +47,20 @@ cd ../ASPA004_3 && dotnet run                    # http://localhost:5052
 ## Задание 1 — Postman
 
 Платформа Postman устанавливается с https://www.postman.com/ (обзор — https://habr.com/ru/companies/maxilect/articles/596789/).
-Работоспособность проверяется импортом приложенной коллекции и отправкой запроса `12.1 GET /Celebrities`.
+Работоспособность проверяется импортом приложенной коллекции и запуском её в Postman
+(Run collection). Для каждого шага в коллекции есть assert-скрипты: статус, тело, Id.
 
-В этом решении все запросы условия дополнительно прогнаны консольным эквивалентом Postman (`curl`),
-фактические ответы приведены в таблицах ниже — статус, `Content-Type` и тело.
+Коллекция проверена раннером Postman — newman:
+
+```bash
+cd lab4/ASPA
+npx --yes newman run postman/ASPA004.postman_collection.json
+```
+
+Проверенный прогон: 17 запросов, 16 test-скриптов, 35 assertions, 0 падений.
+В GUI Postman импортируйте `postman/ASPA004.postman_collection.json` (Import → File)
+и нажмите Run collection — выполняются те же скрипты. Запрос `20-21` выполняется вручную:
+он требует удалить `ASPA004_1/Celebrities/Celebrities.json` между запросами.
 
 ---
 
@@ -69,7 +79,7 @@ public interface IRepository : IDisposable
 
     int? addCelebrity(Celebrity celebrity);              // новый: возвращает присвоенный Id
     bool delCelebrityById(int id);                       // новый
-    bool updCelebrityById(int id, Celebrity celebrity);  // новый
+    int? updCelebrityById(int id, Celebrity celebrity);   // новый: возвращает новый Id
     int SaveChanges();                                   // новый: запись JSON, число записей
 }
 ```
@@ -104,14 +114,15 @@ public bool delCelebrityById(int id)
     return true;
 }
 
-public bool updCelebrityById(int id, Celebrity celebrity)
+public int? updCelebrityById(int id, Celebrity celebrity)
 {
     int index = Array.FindIndex(_celebrities, item => item.Id == id);
-    if (index < 0) return false;
+    if (index < 0) return null;
     // «удалить + добавить»: новая запись получает очередной свободный Id — как в эталонном выводе теста
     _celebrities = _celebrities.Where((_, position) => position != index).ToArray();
-    _celebrities = _celebrities.Append(celebrity with { Id = NextId() }).ToArray();
-    return true;
+    int newId = NextId();
+    _celebrities = _celebrities.Append(celebrity with { Id = newId }).ToArray();
+    return newId;
 }
 
 public int SaveChanges()
@@ -131,7 +142,7 @@ public int SaveChanges()
 
 ### Тест `Test_DAL004` — фактический вывод
 
-Код теста взят из условия без изменений (`addCelebrity` ×4 → `delCelebrityById` ×2 + 1000 → `updCelebrityById` ×2 + 1000).
+Код теста взят из условия; единственное изменение — проверка результата `updCelebrityById` через `!= null`, потому что метод возвращает `int?` (в самом условии интерфейс и код теста противоречат друг другу: `if (int?)` не компилируется). Последовательность вызовов исходная: `addCelebrity` ×4 → `delCelebrityById` ×2 + 1000 → `updCelebrityById` ×2 + 1000.
 
 ```text
 --- start ----------------
@@ -225,19 +236,19 @@ using (IRepository repository = Repository.Create("Celebrities"))
     });
 
     app.MapFallback((HttpContext ctx) =>                     // 5
-        Results.NotFound(new { error = $"{ctx.Request.Path} not supported" }));
+        Results.NotFound(new { error = $"Path {ctx.Request.Path} not supported" }));
 
     app.Map("/Celebrities/Error", (HttpContext ctx) => {     // 6
         Exception? ex = ctx.Features.Get<IExceptionHandlerFeature>()?.Error;
         IResult rc = Results.Problem(detail: "Panic", instance: app.Environment.EnvironmentName,
-            title: "ASP004", statusCode: 500);
+            title: "ASPA004", statusCode: 500);
         if (ex != null)
         {
             if (ex is FoundByIdException) rc = Results.NotFound(ex.Message);
             if (ex is BadHttpRequestException) rc = Results.BadRequest(ex.Message);
-            if (ex is SaveException) rc = Results.Problem(title: "ASP404/SaveChanges", ...);
-            if (ex is AddCelebrityException) rc = Results.Problem(title: "ASP404/AddCelebrity", ...);
-            if (ex is FileNotFoundException) rc = Results.Problem(title: "ASPA000", ...);   // добавлено в п.21
+            if (ex is SaveException) rc = Results.Problem(title: "ASPA004/SaveChanges", ...);
+            if (ex is AddCelebrityException) rc = Results.Problem(title: "ASPA004/AddCelebrity", ...);
+            if (ex is FileNotFoundException) rc = Results.Problem(title: "ASPA004", ...);   // добавлено в п.21
         }
         return rc;
     });
@@ -258,7 +269,7 @@ public class AddCelebrityException : Exception { ... }// "AddCelebrityException 
 | 2 | `app.MapGet("/Celebrities", ...)` | конечная точка GET: возвращает массив `Celebrity[]`, сериализуется в JSON автоматически (200) |
 | 3 | `{id:int}` + `throw new FoundByIdException(...)` | констрейнт маршрута: только целое число; если записи нет — пользовательское исключение (не 404 напрямую, статус формирует обработчик) |
 | 4 | `MapPost` + `addCelebrity` + `SaveChanges() <= 0` | добавление: Id присваивает DAL; `null` → `AddCelebrityException`; `SaveChanges() <= 0` → `SaveException`; в ответ уходит созданный объект |
-| 5 | `app.MapFallback(...)` | «ловушка» для путей, не совпавших ни с одной конечной точкой: 404 + `{"error":"<путь> not supported"}`. Именно она отвечает на PUT/DELETE в этой версии приложения и на `/Celebrities/5aa4` (не проходит констрейнт `:int`) |
+| 5 | `app.MapFallback(...)` | «ловушка» для путей, не совпавших ни с одной конечной точкой: 404 + `{"error":"Path <путь> not supported"}`. Именно она отвечает на PUT/DELETE в этой версии приложения и на `/Celebrities/5aa4` (не проходит констрейнт `:int`) |
 | 6 | `app.Map("/Celebrities/Error", ...)`, `Results.Problem(...)`, `IResult` | обработчик ошибок: `Results.Problem` формирует Problem Details (RFC 7807/9457) с `title`, `detail`, `status`, `instance`; `IResult` позволяет вернуть разные ответы из одной ветки. `Map` (без указания метода) нужен потому, что конвейер повторно выполняется с **исходным** HTTP-методом (POST/PUT/DELETE), а не только GET |
 | 7 | классы исключений | маркерные типы для «своих» ошибок; текст сообщения формируется в конструкторе (`Found by Id: ...`), поэтому в ответ попадает готовый текст |
 
@@ -269,11 +280,11 @@ public class AddCelebrityException : Exception { ... }// "AddCelebrityException 
 | 12.1 | `GET /Celebrities` | 200 | массив 7 объектов | `MapGet` (п.2) |
 | 12.2 | `GET /Celebrities/5` | 200 | `{"id":5,...,"surname":"Torvalds",...}` | `MapGet("/Celebrities/{id:int}")` |
 | 14 | `GET /Celebrities/5555` | 404 | `"Found by Id: Celebrity Id = 5555"` | `FoundByIdException` → обработчик → `Results.NotFound` |
-| 15 | `GET /Celebrities/5aa4` | 404 | `{"error":"/Celebrities/5aa4 not supported"}` | `MapFallback` (строка не проходит `{id:int}`) |
+| 15 | `GET /Celebrities/5aa4` | 404 | `{"error":"Path /Celebrities/5aa4 not supported"}` | `MapFallback` (строка не проходит `{id:int}`) |
 | 16 | `POST /Celebrities` (Ada Lovelace) | 200 | `{"id":8,"firstname":"Ada","surname":"Lovelace","photoPath":"/Photo/Lovelace.jpg"}` | `MapPost`, Id — из `addCelebrity`, запись — `SaveChanges` |
 | 17 | `GET /Celebrities/8` | 200 | созданная Ada Lovelace | `MapGet` по Id (данные из JSON) |
-| 18 | `PUT /Celebrities/8` | 404 | `{"error":"/Celebrities/8 not supported"}` | `MapFallback` — PUT ещё не реализован |
-| 19 | `DELETE /Celebrities/8` | 404 | `{"error":"/Celebrities/8 not supported"}` | `MapFallback` — DELETE ещё не реализован |
+| 18 | `PUT /Celebrities/8` | 404 | `{"error":"Path /Celebrities/8 not supported"}` | `MapFallback` — PUT ещё не реализован |
+| 19 | `DELETE /Celebrities/8` | 404 | `{"error":"Path /Celebrities/8 not supported"}` | `MapFallback` — DELETE ещё не реализован |
 
 Для 18/19 тело содержит путь `/Celebrities/8`, а не `/Celebrities/8 ` с методом: `MapFallback`
 видит только `Request.Path`. Статус 404 задан в `Results.NotFound`, тело — анонимный объект `{ error = ... }`.
@@ -291,7 +302,7 @@ curl -X POST http://localhost:5050/Celebrities -H 'Content-Type: application/jso
 Ответ (500, `application/problem+json`) — «паника» без деталей:
 
 ```json
-{"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"ASP004","status":500,
+{"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"ASPA004","status":500,
  "detail":"Panic","instance":"Development"}
 ```
 
@@ -315,19 +326,20 @@ fail: Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware[1]
 
 ```csharp
 if (ex is FileNotFoundException)
-    rc = Results.Problem(title: "ASPA000", detail: ex.Message,
+    rc = Results.Problem(title: "ASPA004", detail: ex.Message,
         instance: app.Environment.EnvironmentName, statusCode: 500);
 ```
 
 Повторный POST при всё ещё удалённом файле:
 
 ```json
-{"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"ASPA000","status":500,
+{"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"ASPA004","status":500,
  "detail":"Could not find file '.../ASPA004_1/Celebrities/Celebrities.json'.","instance":"Development"}
 ```
 
 Отличие от примера в условии только в номере раздела RFC: .NET 8 формирует ссылку на RFC 9110
 (в примере — RFC 7231; RFC 9110 заменил 7231 в 2022 г., смысл тот же — 500 Internal Server Error).
+Поле `title` совпадает с примером — `ASPA004`.
 После опыта файл возвращён на место (`mv ...json.deleted ...json`), приложение продолжает работать.
 
 ---
@@ -361,11 +373,14 @@ public class DeleteByIdException : Exception
 
 | № | Запрос | Код | Тело |
 |---|---|---|---|
-| 1 | `POST /Celebrities` `{"firstname":"ForDelete",...}` | 200 | `{"id":9,"firstname":"ForDelete",...}` (Id 8 занят Ada из предыдущего сценария) |
+| 1 | `POST /Celebrities` `{"firstname":"ForDelete",...}` | 200 | `{"id":9,"firstname":"ForDelete",...}` (в данных ASPA004_2 уже есть Ada с Id 8) |
 | 2 | `GET /Celebrities/9` | 200 | `{"id":9,"firstname":"ForDelete",...}` |
 | 3 | `DELETE /Celebrities/9` | 200 | `"Celebrity with Id = 9 deleted"` |
 | 4 | `GET /Celebrities/9` (повторно) | 404 | `"Found by Id: /Celebrities, Celebrity Id = 9"` |
 | 5 | `DELETE /Celebrities/1000` | 404 | `"Delete by Id:DELETE /Celebrities error, Id = 1000"` |
+
+> В `ASPA004_2/Celebrities/Celebrities.json` уже есть Ada (Id 8) — это состояние после POST
+> из сценария ASPA004_1, поэтому первый POST теста получает Id 9, как на скриншоте условия.
 
 ---
 
@@ -377,9 +392,10 @@ public class DeleteByIdException : Exception
 // Обработка PUT-запроса (п.31)
 app.MapPut("/Celebrities/{id:int}", (int id, Celebrity celebrity) =>
 {
-    if (!repository.updCelebrityById(id, celebrity)) throw new UpdateByIdException($"{CelebrityRoute} error, Id = {id}");
+    int? newId = repository.updCelebrityById(id, celebrity);
+    if (newId == null) throw new UpdateByIdException($"{CelebrityRoute} error, Id = {id}");
     if (repository.SaveChanges() <= 0) throw new SaveException($"{CelebrityRoute} error, SaveChanges() <= 0");
-    return new Celebrity(id, celebrity.Firstname, celebrity.Surname, celebrity.PhotoPath);
+    return new Celebrity((int)newId, celebrity.Firstname, celebrity.Surname, celebrity.PhotoPath);
 });
 ```
 
@@ -393,10 +409,11 @@ app.MapPut("/Celebrities/{id:int}", (int id, Celebrity celebrity) =>
 | 2 | `PUT /Celebrities/8` `{"firstname":"Updated",...}` | 200 | `{"id":8,"firstname":"Updated","surname":"Updated","photoPath":"/Photo/Updated.jpg"}` |
 | 3 | `GET /Celebrities/8` | 200 | то же, что вернул PUT — изменение сохранено |
 
-Особенность DAL004: `updCelebrityById` удаляет старую запись и добавляет новую с очередным Id.
-Для данных 1–7 + запись 8 это даёт новый Id 8 (максимум после удаления — 7), поэтому PUT `/8`
-и последующий GET `/8` возвращают запись с Id 8, как в условии. Для «середины» списка Id сдвинулся бы —
-это поведение эталонного DAL004, а не ошибка реализации.
+Особенность DAL004: `updCelebrityById` удаляет старую запись, добавляет новую с очередным Id
+и возвращает этот новый Id. Для данных 1–7 + запись 8 это даёт Id 8 (максимум после удаления — 7),
+поэтому PUT `/8` и последующий GET `/8` возвращают запись с Id 8, как в условии. Для Id из середины
+списка PUT возвращает новый Id (например, PUT `/3` → Id 9), и запись доступна по этому новому Id;
+старый Id после обновления не существует — это семантика «удалить + добавить» из эталонного DAL004.
 
 ---
 
@@ -468,10 +485,12 @@ app.MapPut("/Celebrities/{id:int}", (int id, Celebrity celebrity) =>
 | `dotnet build ASPA.sln` | 0 Warning(s), 0 Error(s) |
 | `Test_DAL004` | вывод совпадает с эталоном условия (Id 8–11, 12–13, `delete/update 1000 error`) |
 | ASPA004_1: запросы 12–19 | 200/200/404/404/200/200/404/404 — как в условии |
-| ASPA004_1: п.20 (файл удалён) | 500, `title: ASP004`, `detail: "Panic"`, стек в консоли |
-| ASPA004_1: п.21 (ветка FileNotFoundException) | 500, `title: ASPA000`, `detail: "Could not find file '…Celebrities.json'."` |
+| ASPA004_1: п.20 (файл удалён) | 500, `title: ASPA004`, `detail: "Panic"`, стек в консоли |
+| ASPA004_1: п.21 (ветка FileNotFoundException) | 500, `title: ASPA004`, `detail: "Could not find file '…Celebrities.json'."` |
 | ASPA004_2: 5 тестов п.27 | 200 / 200 / 200 / 404 / 404 с текстами из условия |
 | ASPA004_3: 3 теста п.33 | 200 / 200 / 200, PUT и GET возвращают `id: 8` с `Updated` |
+| ASPA004_3: PUT по Id из середины (`/3`) | 200, в ответе новый Id 9; GET `/9` → 200, GET `/3` → 404 |
+| Коллекция Postman (newman) | 17 запросов, 16 test-скриптов, 35 assertions, 0 падений |
 | Лаба 3 (регресс) | сборка 0/0; `Test_DAL003` и все endpoint'ы ASPA003 отвечают как в README лабы 3 |
 
 ## Источники
