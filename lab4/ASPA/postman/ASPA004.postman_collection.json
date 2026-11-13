@@ -1,0 +1,189 @@
+{
+  "info": {
+    "name": "ASPA004 — лабораторная 4",
+    "description": "Запросы к ASPA004_1 (порт 5050), ASPA004_2 (5051), ASPA004_3 (5052). Нумерация совпадает с пунктами условия.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base1", "value": "http://localhost:5050" },
+    { "key": "base2", "value": "http://localhost:5051" },
+    { "key": "base3", "value": "http://localhost:5052" }
+  ],
+  "item": [
+    {
+      "name": "ASPA004_1",
+      "item": [
+        {
+          "name": "12.1 GET /Celebrities — список",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base1}}/Celebrities", "host": ["{{base1}}"], "path": ["Celebrities"] }
+          }
+        },
+        {
+          "name": "12.2 GET /Celebrities/5 — найден",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base1}}/Celebrities/5", "host": ["{{base1}}"], "path": ["Celebrities", "5"] }
+          }
+        },
+        {
+          "name": "14 GET /Celebrities/5555 — не найден (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base1}}/Celebrities/5555", "host": ["{{base1}}"], "path": ["Celebrities", "5555"] }
+          }
+        },
+        {
+          "name": "15 GET /Celebrities/5aa4 — fallback (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base1}}/Celebrities/5aa4", "host": ["{{base1}}"], "path": ["Celebrities", "5aa4"] }
+          }
+        },
+        {
+          "name": "16 POST /Celebrities — Ada Lovelace",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"Ada\",\n    \"surname\": \"Lovelace\",\n    \"photoPath\": \"/Photo/Lovelace.jpg\"\n}"
+            },
+            "url": { "raw": "{{base1}}/Celebrities", "host": ["{{base1}}"], "path": ["Celebrities"] }
+          }
+        },
+        {
+          "name": "17 GET /Celebrities/8 — созданная запись",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base1}}/Celebrities/8", "host": ["{{base1}}"], "path": ["Celebrities", "8"] }
+          }
+        },
+        {
+          "name": "18 PUT /Celebrities/8 — не поддерживается (fallback)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"Ada\",\n    \"surname\": \"Lovelace\",\n    \"photoPath\": \"/Photo/Lovelace.jpg\"\n}"
+            },
+            "url": { "raw": "{{base1}}/Celebrities/8", "host": ["{{base1}}"], "path": ["Celebrities", "8"] }
+          }
+        },
+        {
+          "name": "19 DELETE /Celebrities/8 — не поддерживается (fallback)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{base1}}/Celebrities/8", "host": ["{{base1}}"], "path": ["Celebrities", "8"] }
+          }
+        },
+        {
+          "name": "20-21 POST /Celebrities после удаления Celebrities.json",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"Charlse\",\n    \"surname\": \"Babbage\",\n    \"photoPath\": \"/Photo/Babbage.jpg\"\n}"
+            },
+            "url": { "raw": "{{base1}}/Celebrities", "host": ["{{base1}}"], "path": ["Celebrities"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ASPA004_2 — DELETE",
+      "item": [
+        {
+          "name": "25 POST /Celebrities — ForDelete",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"ForDelete\",\n    \"surname\": \"ForDelete\",\n    \"photoPath\": \"/Photo/ForDelete.jpg\"\n}"
+            },
+            "url": { "raw": "{{base2}}/Celebrities", "host": ["{{base2}}"], "path": ["Celebrities"] }
+          }
+        },
+        {
+          "name": "27.1 GET /Celebrities/9 — найден",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base2}}/Celebrities/9", "host": ["{{base2}}"], "path": ["Celebrities", "9"] }
+          }
+        },
+        {
+          "name": "27.2 DELETE /Celebrities/9 — удалён",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{base2}}/Celebrities/9", "host": ["{{base2}}"], "path": ["Celebrities", "9"] }
+          }
+        },
+        {
+          "name": "27.3 GET /Celebrities/9 — 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base2}}/Celebrities/9", "host": ["{{base2}}"], "path": ["Celebrities", "9"] }
+          }
+        },
+        {
+          "name": "27.4 DELETE /Celebrities/1000 — 404",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{base2}}/Celebrities/1000", "host": ["{{base2}}"], "path": ["Celebrities", "1000"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ASPA004_3 — PUT",
+      "item": [
+        {
+          "name": "31 POST /Celebrities — ForUpdate",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"ForUpdate\",\n    \"surname\": \"ForUpdate\",\n    \"photoPath\": \"/Photo/ForUpdate.jpg\"\n}"
+            },
+            "url": { "raw": "{{base3}}/Celebrities", "host": ["{{base3}}"], "path": ["Celebrities"] }
+          }
+        },
+        {
+          "name": "33.1 PUT /Celebrities/8 — изменён",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"Updated\",\n    \"surname\": \"Updated\",\n    \"photoPath\": \"/Photo/Updated.jpg\"\n}"
+            },
+            "url": { "raw": "{{base3}}/Celebrities/8", "host": ["{{base3}}"], "path": ["Celebrities", "8"] }
+          }
+        },
+        {
+          "name": "33.2 GET /Celebrities/8 — изменённая запись",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base3}}/Celebrities/8", "host": ["{{base3}}"], "path": ["Celebrities", "8"] }
+          }
+        }
+      ]
+    }
+  ]
+}
